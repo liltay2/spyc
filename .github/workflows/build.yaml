@@ -23,11 +23,8 @@ jobs:
             with:
                 python-version: ${{ matrix.python-version }}
 
-          - name: Install Poetry and dependencies
-            uses: snok/install-poetry@v1.1.6
-          - run: |
-              pip install -U pip
-              poetry install
+          - name: Install Poetry & deps
+          - uses: knowsuchagency/poetry-install@v1
             env:
               POETRY_VIRTUALENVS_CREATE: false
 
