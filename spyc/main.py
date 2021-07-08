@@ -180,5 +180,8 @@ def main():
                     location=["Miami", "Portland"], test_id=2.0, meanline=True
                 )
 
+    if arguments["dash"]:
+        print("pretend dash ran")
+
 
 main()
