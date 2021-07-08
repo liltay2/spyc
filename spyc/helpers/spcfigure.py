@@ -131,9 +131,12 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
                     mode="lines+markers",
                     name="Raw Data",
                     marker_symbol=dataset["Marker"],
+                    marker=dict(
+                        size=12, line=dict(width=2, color="DarkSlateGrey")
+                    ),
                     legendgroup=legend_name,
                     legendgrouptitle_text=legend_name,
-                    line=dict(color=colour, width=5),
+                    line=dict(color=colour, width=4),
                 )
             )
 
