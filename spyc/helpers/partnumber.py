@@ -160,7 +160,7 @@ class PartNumber:
 
             figs.append(
                 self.xbar_plot(
-                    t_id,
+                    test_id,
                     location=location,
                     capability_loc=capability_loc,
                     **kwargs,
