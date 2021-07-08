@@ -2,7 +2,6 @@
 
 Usage:
     spyc plot <dir> [--verbose|--debug]
-    spyc dash
     spyc -h | --help
     spyc --version
 
@@ -25,12 +24,45 @@ from rich.markdown import Markdown
 from rich_dataframe import prettify  # type: ignore
 from docopt import docopt  # type: ignore
 import pandas as pd  # type: ignore
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
 
 
 # these imports will not work if ran as a script
 # use python -m main
 from .__init__ import __version__  # type: ignore
 from .helpers.partnumber import PartNumber
+
+# create logger
+log = logging.getLogger(__name__)
+
+
+def make_parts(filepath: str) -> list[PartNumber]:
+    """Create lsit of parts in the target directory
+
+    Args:
+        filepath (str): Directory to look within
+
+    Returns:
+        list[PartNumber]: Partslist
+    """
+
+    # Look up xlsx file in the specified directory
+    data_files = glob.glob(f"{filepath}/*.xlsx")
+
+    log.info(f"{len(data_files)} files found in {filepath}")
+
+    # create Part_Number Object for each file
+    parts = []
+    for file in data_files:
+
+        try:
+            parts.append(PartNumber(file))
+        except ValueError as e:
+            log.warning(e)
+
+    return parts
 
 
 @entry
@@ -111,9 +143,6 @@ def main():
         # Set logging threshold at info
         logging.basicConfig(format="%(levelname)s: %(message)s", level=30)
 
-    # create logger
-    log = logging.getLogger(__name__)
-
     # Run command passed
     if arguments["plot"]:
 
@@ -125,63 +154,45 @@ def main():
         else:
             filepath = os.path.abspath(arguments["<dir>"])
 
-        # Look up xlsx file in the specified directory
-        data_files = glob.glob(f"{filepath}/*.xlsx")
+        for part in make_parts(filepath):
 
-        vprint(f"{len(data_files)} files found in {filepath}")
-
-        # create Part_Number Object for each file
-        parts = []
-        for file in data_files:
-
-            try:
-                parts.append(PartNumber(file))
-            except ValueError as e:
-                log.warning(e)
-
-            # Display outputs if verbose or debug
-            for part in parts:
-                # Raw Data
-                vprint(f"# {part.header['Part Number']}", md=True)
-                vprint("**Notes:**", md=True)
-                vprint(f"{part.header['Notes']}", md=True)
-                vprint("## Test List", md=True)
+            # Raw Data
+            vprint(f"# {part.header['Part Number']}", md=True)
+            vprint("**Notes:**", md=True)
+            vprint(f"{part.header['Notes']}", md=True)
+            vprint("## Test List", md=True)
+            vprettify(
+                part.tests, first_rows=False, delay_time=1, clear_console=False
+            )
+            vprint("## Raw Data", md=True)
+            for loc, data in part.data.items():
+                vprint(f"## {loc}", md=True)
                 vprettify(
-                    part.tests,
+                    data.unstack(level=-1)["Reading"].merge(
+                        part.tests, on="Test_ID", how="left"
+                    ),
                     first_rows=False,
                     delay_time=1,
                     clear_console=False,
                 )
-                vprint("## Raw Data", md=True)
-                for loc, data in part.data.items():
-                    vprint(f"## {loc}", md=True)
-                    vprettify(
-                        data.unstack(level=-1)["Reading"].merge(
-                            part.tests, on="Test_ID", how="left"
-                        ),
-                        first_rows=False,
-                        delay_time=1,
-                        clear_console=False,
-                    )
 
-                # Plots for all sites all tests,
-                # calculate capability for Portland
-                part.xbar(
-                    capability_loc="Portland", meanline=True, violin=True
-                )
+            # Plots for all sites all tests,
+            # calculate capability for Portland
+            part.xbar(capability_loc="Portland", meanline=True, violin=True)
 
-                # Plots for 1 site 1 test
-                part.xbar(
-                    location="Miami", test_id=1.1, meanline=True, violin=True
-                )
+            # Plots for 1 site 1 test
+            part.xbar(
+                location="Miami", test_id=1.1, meanline=True, violin=True
+            )
 
-                # Plots for both sites 1 test
-                part.xbar(
-                    location=["Miami", "Portland"], test_id=2.0, meanline=True
-                )
+            # Plots for both sites 1 test
+            part.xbar(
+                location=["Miami", "Portland"], test_id=2.0, meanline=True
+            )
 
     if arguments["dash"]:
-        print("pretend dash ran")
+        log.info("Launching Dash App")
+        run_dash_app(arguments)
 
 
 main()
