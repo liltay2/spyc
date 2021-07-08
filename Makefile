@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := tox
-.PHONY: tox lint test build run run_v run_d
+.PHONY: tox lint test build plot plot_v plot_d dash dash_v dash_d
 
 lint:
 	poetry run black spyc/
@@ -16,11 +16,20 @@ tox:
 build: tox # run tox first before building
 	poetry build
 
-run:
-	poetry run python -m spyc.main run tests/
+plot:
+	poetry run python -m spyc.main plot tests/
 
-run_v:
-	poetry run python -m spyc.main run tests/ -v
+plot_v:
+	poetry run python -m spyc.main plot tests/ -v
 
-run_d:
-	poetry run python -m spyc.main run tests/ -d
+plot_d:
+	poetry run python -m spyc.main plot tests/ -d
+
+dash:
+	poetry run python -m spyc.main dash tests/
+
+dash_v:
+	poetry run python -m spyc.main dash tests/ -v
+
+dash_d:
+	poetry run python -m spyc.main dash tests/ -d

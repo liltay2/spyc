@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Simple tool to help plot SPC data from multiple locations for comparison"
 authors = ["fanoway <86997883+fanoway@users.noreply.github.com>"]
 readme = "README.MD"
+homepage="https://github.com/fanoway/spyc"
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -26,6 +27,7 @@ mypy = "^0.910"
 flake8 = "^3.9.2"
 pylint = "^2.9.3"
 flake8-docstrings = "^1.6.0"
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -53,7 +55,6 @@ basepython = python3
 whitelist_externals = poetry
 
 commands =
-	poetry install -v
 	poetry run black spyc/
 	poetry run flake8 spyc/
 	poetry run pylint spyc/ --exit-zero

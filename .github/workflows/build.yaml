@@ -2,10 +2,8 @@ name: build
 
 on:
     push:
-        branches: [main]
     pull_request:
         branches: [main]
-    workflow_dispatch:
 
 jobs: 
     build:
@@ -25,11 +23,22 @@ jobs:
             with:
                 python-version: ${{ matrix.python-version }}
 
+
+          - name: Install Poetry
+            run: pip install poetry
+
+
+          - name: Load cached venv
+            id: cached-poetry-dependencies
+            uses: actions/cache@v2
+            with:
+              path: .venv
+              key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
           - name: Install dependencies
-            run: |
-                python -m pip install --upgrade pip
-                python -m pip install poetry
-                poetry install
+            if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+            run: poetry install --no-interaction
+
 
           - name: Run tox and build
             run: |
@@ -39,9 +48,9 @@ jobs:
             run: |
               coverage run -m spyc.spyc
 
-          # - name: "Upload coverage to Codecov"
-          #   uses: codecov/codecov-action@v1
-          #   if: contains(env.USING_COVERAGE, matrix.python-version)
-          #   with:
-          #     token: ${{ secrets.CODECOV_TOKEN }} 
-          #     fail_ci_if_error: true
+          - name: "Upload coverage to Codecov"
+            uses: codecov/codecov-action@v1
+            if: contains(env.USING_COVERAGE, matrix.python-version)
+            with:
+              token: ${{ secrets.CODECOV_TOKEN }} 
+              fail_ci_if_error: true
