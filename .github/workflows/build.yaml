@@ -23,35 +23,22 @@ jobs:
             with:
                 python-version: ${{ matrix.python-version }}
 
-          #----------------------------------------------
-          #  -----  install & configure poetry  -----      
-          #----------------------------------------------
+
           - name: Install Poetry
             run: pip install poetry
 
-          #----------------------------------------------
-          #       load cached venv if cache exists      
-          #----------------------------------------------
+
           - name: Load cached venv
             id: cached-poetry-dependencies
             uses: actions/cache@v2
             with:
               path: .venv
               key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
-          #----------------------------------------------
-          # install dependencies if cache does not exist 
-          #----------------------------------------------
+
           - name: Install dependencies
             if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
-            run: poetry install --no-interaction --no-root
-          #----------------------------------------------
-          # install your root project, if required 
-          #----------------------------------------------      
-          - name: Install library
-            run: poetry install --no-interaction -vvv
-          #----------------------------------------------
-          #              run test suite   
-          #----------------------------------------------
+            run: poetry install --no-interaction
+
 
           - name: Run tox and build
             run: |
