@@ -1,7 +1,8 @@
 """SPYC (pronounced spicy).
 
 Usage:
-    spyc run <dir> [--verbose|--debug]
+    spyc plot <dir> [--verbose|--debug]
+    spyc dash
     spyc -h | --help
     spyc --version
 
@@ -114,9 +115,9 @@ def main():
     log = logging.getLogger(__name__)
 
     # Run command passed
-    if arguments["run"]:
+    if arguments["plot"]:
 
-        log.debug("Run command")
+        log.debug("Plot command")
 
         # ensure path is absolute
         if os.path.isabs(arguments["<dir>"]):
