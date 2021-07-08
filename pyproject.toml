@@ -54,7 +54,7 @@ basepython = python3
 whitelist_externals = poetry
 
 commands =
-	poetry install -v
+
 	poetry run black spyc/
 	poetry run flake8 spyc/
 	poetry run pylint spyc/ --exit-zero
