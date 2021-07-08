@@ -15,7 +15,6 @@ tox:
 
 build: tox # run tox first before building
 	poetry build
-	pipx install . --force
 
 run:
 	poetry run python -m spyc.main run tests/
