@@ -160,7 +160,7 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
                         meanline_visible=True,
                         line=dict(color=colour),
                         legendgroup=legend_name,
-                        name=f"Distribution",
+                        name="Distribution",
                     )
                 )
             colour_count += 1  # increment colour counter

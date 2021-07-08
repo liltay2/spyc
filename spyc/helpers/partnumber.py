@@ -248,7 +248,8 @@ class PartNumber:
         # Create figure to write too
         fig = SPCFigure(
             title=(
-                f"{self.header['Part Number']}-{self.tests.loc[test_id,'Test_Name']},{capability_loc}"
+                f"{self.header['Part Number']}"
+                f"-{self.tests.loc[test_id,'Test_Name']},{capability_loc}"
                 f" Cp/Cpk={cp:.2f}/{cpk:.2f}"
             )
         )
