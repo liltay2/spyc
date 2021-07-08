@@ -20,7 +20,7 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
     i.e can add meanlines and violin plots if requested.
     """
 
-    colour_list = ["#6a0136", "#bfab25", "#b81365", "#026c7c", "#055864"]
+    colour_list = ["#fbaf00", "#007cbe", "#ffd639", "#ffa3af", "#00af54"]
 
     def __init__(
         self, *args: str, title: Optional[str] = None, **kwargs: str
@@ -105,7 +105,7 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
         # green box for tolerance band if both usl and lsl are specified
         if not np.isnan(lsl) and not np.isnan(usl):
             self.add_hrect(
-                y0=lsl, y1=usl, line_width=0, fillcolor="green", opacity=0.1
+                y0=lsl, y1=usl, line_width=0, fillcolor="#00af54", opacity=0.1
             )
 
         # loop through datasets and plot
@@ -133,7 +133,7 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
                     marker_symbol=dataset["Marker"],
                     legendgroup=legend_name,
                     legendgrouptitle_text=legend_name,
-                    line=dict(color=colour),
+                    line=dict(color=colour, width=5),
                 )
             )
 
@@ -157,7 +157,7 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
                         meanline_visible=True,
                         line=dict(color=colour),
                         legendgroup=legend_name,
-                        name=f"Distribution {legend_name}",
+                        name=f"Distribution",
                     )
                 )
             colour_count += 1  # increment colour counter
