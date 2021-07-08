@@ -10,9 +10,7 @@ import plotly.io as pio  # type: ignore
 import numpy as np
 
 # Plot formattingpipen
-pio.templates.default = "simple_white"
-
-# TODO take data input as dict
+pio.templates.default = "plotly_white"
 
 
 class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
@@ -21,6 +19,8 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
     Custom plots for SPC between mulitple sites,
     i.e can add meanlines and violin plots if requested.
     """
+
+    colour_list = ["#6a0136", "#bfab25", "#b81365", "#026c7c", "#055864"]
 
     def __init__(
         self, *args: str, title: Optional[str] = None, **kwargs: str
@@ -111,16 +111,10 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
         # loop through datasets and plot
         # Counter for colours so meanline and violinmatch in each legend group
         colour_count = 0
-        colour_list = [
-            "#C4D600",
-            "#658D1B",
-            "#FF8200",
-            "#00A5BD",
-            "#333F48",
-            "#D9D9D6",
-        ]
         for key, dataset in datasets.items():
-            colour = colour_list[colour_count]  # Get colour for this dataset
+            colour = self.colour_list[
+                colour_count
+            ]  # Get colour for this dataset
             legend_name = key
 
             # Marker style to flag OOT data
