@@ -23,10 +23,28 @@ jobs:
             with:
                 python-version: ${{ matrix.python-version }}
 
-          - name: Install Poetry & deps
-            uses: knowsuchagency/poetry-install@v1
-            env:
-              POETRY_VIRTUALENVS_CREATE: false
+          - name: Install poetry
+            run: |
+              curl -fsS -o get-poetry.py https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py
+              python get-poetry.py -y
+              echo "::set-env name=PATH::$HOME/.poetry/bin:$PATH"
+
+          - name: Configure poetry
+            run: poetry config virtualenvs.in-project true
+
+          - name: Set up cache
+            uses: actions/cache@v1
+            id: cache
+            with:
+              path: .venv
+              key: venv-${{ runner.os }}-${{ steps.full-python-version.outputs.version }}-${{ hashFiles('**/poetry.lock') }}
+          
+          - name: Ensure cache is healthy
+            if: steps.cache.outputs.cache-hit == 'true'
+            run: poetry run pip --version >/dev/null 2>&1 || rm -rf .venv
+          
+          - name: Install Dependencies
+            run: poetry install
 
           - name: Run tox and build
             run: |
