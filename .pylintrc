@@ -1,0 +1,14 @@
+
+[MASTER]
+init-hook='import os, sys; sys.path.append(os.path.join(os.getcwd(),'spyc'))'
+
+
+[BASIC]
+# Good variable names which should always be accepted, separated by a comma
+good-names= cp, cpk, vn, pdx, SD, md, df, e
+
+
+[MISCELLANEOUS]
+
+# List of note tags to take in consideration, separated by a comma.
+notes=FIXME,XXX
