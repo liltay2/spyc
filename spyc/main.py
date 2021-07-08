@@ -137,13 +137,14 @@ def main():
         # create Part_Number Object for each file
         parts = []
         for file in data_files:
-            parts.append(PartNumber(file))
+
+            try:
+                parts.append(PartNumber(file))
+            except ValueError as e:
+                log.warning(e)
 
             # Display outputs if verbose or debug
             for part in parts:
-
-                vprint(part)
-
                 # Raw Data
                 vprint(f"# {part.header['Part Number']}", md=True)
                 vprint("**Notes:**", md=True)
@@ -175,12 +176,12 @@ def main():
 
                 # Plots for 1 site 1 test
                 part.xbar(
-                    location="Miami", test_id="1", meanline=True, violin=True
+                    location="Miami", test_id=1.1, meanline=True, violin=True
                 )
 
                 # Plots for both sites 1 test
                 part.xbar(
-                    location=["Miami", "Portland"], test_id="2", meanline=True
+                    location=["Miami", "Portland"], test_id=2.0, meanline=True
                 )
 
 

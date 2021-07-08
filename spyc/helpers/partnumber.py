@@ -56,6 +56,7 @@ class PartNumber:
                 "Max_Tol": np.float64,
                 "Units": "string",
                 "Reading": np.float64,
+                "Unit SN": "string",
             }
 
             # Single call to Excel
@@ -63,7 +64,9 @@ class PartNumber:
 
             # Generic header infomation
             self.header: dict[str, str] = (
-                pd.read_excel(xls, sheet_name="Header", dtype=col_dtype)
+                pd.read_excel(
+                    xls, sheet_name="Header", header=0, dtype=col_dtype
+                )
                 .iloc[0]
                 .to_dict()
             )
@@ -71,19 +74,16 @@ class PartNumber:
             self.log.debug(self.header)
 
             # Test list
-            self.tests: pd.DataFram = pd.read_excel(
-                xls,
-                sheet_name="Test_List",
-                index_col=0,
-                header=0,
-                dtype=col_dtype,
-            )
+            self.tests: pd.DataFrame = pd.read_excel(
+                xls, sheet_name="Test_List", header=0, dtype=col_dtype
+            ).set_index("Test_ID")
             self.log.debug("Test_List Read")
             self.log.debug(self.tests.head(5))
 
             # Data from each site. Store in dict with key as sheetname
             self.data: dict[str, pd.DataFrame] = {}  # empty dict
             for sheet_name in xls.sheet_names:
+
                 if sheet_name not in [
                     "Header",
                     "Test_List",
@@ -92,22 +92,27 @@ class PartNumber:
                         self.data[sheet_name] = pd.read_excel(
                             xls,
                             sheet_name=sheet_name,
-                            index_col=[0, 1],
+                            header=0,
                             dtype=col_dtype,
-                        )
+                        ).set_index(["Test_ID", "Unit SN"])
                         self.log.debug(f"{sheet_name} loaded")
                         self.log.debug(self.data[sheet_name].head(5))
                     except Exception as e:
-                        self.log.error(f"{sheet_name} failed to load\n{e}")
+                        self.log.info(f"{sheet_name} failed to load\n{e}")
+
+            # Return an error if no data sheets are loaded
+            if not self.data:
+                raise ValueError(f"No data sheets were read from {filepath}")
 
             self.log.info(f"{filepath} loaded with {len(self.data)} locations")
             self.log.debug(f"locations= {list(self.data.keys())}")
 
-        except Exception as e:
-            self.log.error(f"{filepath} failed to load\n{e}")
+        except ValueError as e:
+            self.log.warning(f"{filepath} failed to load\n{e}")
+            raise ValueError(e)
 
     def __repr__(self):
-        """repr"""
+        """__repr__"""
 
         return (
             f"PN: {self.header['Part Number']}, locations ="
@@ -144,10 +149,10 @@ class PartNumber:
             self.log.debug("Plotting all tests")
             # Plot all tests
             for t_id in self.tests.index.get_level_values(0).unique():
-                self.log.debug(f"Plotting {t_id}")
+                self.log.debug(f"Plotting test = {t_id}")
                 figs.append(
                     self.xbar_plot(
-                        t_id,
+                        str(t_id),
                         location=location,
                         capability_loc=capability_loc,
                         **kwargs,
@@ -156,11 +161,11 @@ class PartNumber:
 
         else:
             # Plot one test
-            self.log.debug(f"Plotting 1 test {test_id}")
+            self.log.debug(f"Single Plot, test = {test_id}")
 
             figs.append(
                 self.xbar_plot(
-                    test_id,
+                    str(test_id),
                     location=location,
                     capability_loc=capability_loc,
                     **kwargs,
@@ -194,6 +199,8 @@ class PartNumber:
             to plot data for, default is to plot all locations
 
         """
+        # Enforce string type
+        test_id = str(test_id)
 
         # Check if capability is needed
         if (
@@ -228,14 +235,15 @@ class PartNumber:
                 cp, cpk = np.nan, np.nan
 
         else:
-            self.log.debug("Calculating capability for single location")
+            self.log.debug(
+                f"Calculating capability for single location - {location}"
+            )
 
             # Get Limits
-
             lsl, usl = self.get_limits(test_id)
 
             cp, cpk = PartNumber.calculate_capability(
-                PartNumber.extract_test(self.data, test_id), lsl, usl
+                PartNumber.extract_test(self.data[location], test_id), lsl, usl
             )
 
             # set capability_loc for the single location requested
@@ -244,7 +252,7 @@ class PartNumber:
 
         # Create figure to write too
         fig = SPCFigure(
-            title=f"""{self.header['Part Number']}-{self.tests.loc[test_id]['Test_Name']},
+            title=f"""{self.header['Part Number']}-{self.tests.loc[test_id,'Test_Name']},
                 {capability_loc} Cp/Cpk={cp:.2f}/{cpk:.2f}"""
         )
 
@@ -267,12 +275,15 @@ class PartNumber:
                 self.data[location], test_id
             )
 
+        self.log.debug(f"Plotting {len(datasets)} locations")
+
         fig.xbar_plot(
             datasets,
             self.tests.loc[test_id],
-            meanline=kwargs["meanline"],
-            violin=kwargs["violin"],
+            meanline=kwargs.get("meanline", False),
+            violin=kwargs.get("violin", False),
         )
+
         return fig
 
     def get_limits(self, test_id: str) -> tuple[float, float]:
@@ -284,7 +295,6 @@ class PartNumber:
         Returns:
             tuple[float, float]: USL, LSL
         """
-
         lsl = self.tests.loc[test_id]["Min_Tol"]
         usl = self.tests.loc[test_id]["Max_Tol"]
         # if not specified set to None

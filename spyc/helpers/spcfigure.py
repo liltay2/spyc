@@ -148,7 +148,10 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
                 self.add_hline(
                     y=statistics.mean(dataset["Reading"]),
                     line_dash="dash",
-                    annotation_text=f"{legend_name}-Mean",
+                    annotation_text=(
+                        f"{legend_name}-Mean ="
+                        f" {statistics.mean(dataset['Reading']):.2f}"
+                    ),
                     annotation_position="top right",
                     line_color=colour,
                     line_width=3,
