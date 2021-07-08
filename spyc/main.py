@@ -1,4 +1,4 @@
-"""SPYC (pronounced spicy)
+"""SPYC (pronounced spicy).
 
 Usage:
     spyc run <dir> [--verbose|--debug]
@@ -34,10 +34,8 @@ from .helpers.partnumber import PartNumber
 
 @entry
 def main():
-    """Main entry point"""
-
+    """Read user input from cli and call plot functions as required."""
     # Argument handling and setup
-
     arguments = docopt(__doc__, version=f"SPYC {__version__}")
 
     # console config for rich outputs
@@ -48,9 +46,9 @@ def main():
     if arguments["--verbose"] or arguments["--debug"]:
 
         def vprint(string: str, md: bool = False):
-            """
-            Only print if Verbose or Deubug option is given,
-            use rich console print method
+            """Only print if Verbose or Deubug option is given.
+
+            Uses rich console print method.
 
             Parameters
             ----------
@@ -60,14 +58,13 @@ def main():
                 Interpret as Markdown
                 Default False.
             """
-
             if md:
                 console.print(Markdown(string))
             else:
                 console.print(string)
 
         def vprettify(df: pd.DataFrame, **kwargs: str):
-            """Table printing for verbose/debug
+            """Table printing for verbose/debug.
 
             Parameters
             ----------
@@ -87,7 +84,7 @@ def main():
     else:
 
         def vprint(string: str, md: bool = False):
-            """Dummy vprint to use if not verbose
+            """If not verbose dummy vprint.
 
             Parameters
             ----------
@@ -97,10 +94,9 @@ def main():
                 Interpret as Markdown, Default False
             """
             # pylint: disable=unused-argument
-            pass
 
         def vprettify(df: pd.DataFrame, **kwargs: str):
-            """Dummy vprettify to use if not verbose
+            """If not verbose dummy vprettify.
 
             Parameters
             ----------
@@ -110,7 +106,6 @@ def main():
                 kwargs for rich-datafrme.prettify()
             """
             # pylint: disable=unused-argument
-            pass
 
         # Set logging threshold at info
         logging.basicConfig(format="%(levelname)s: %(message)s", level=30)

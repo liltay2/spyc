@@ -1,5 +1,4 @@
-"""Plotting library
-"""
+"""Plotting library."""
 
 # Imports
 import statistics
@@ -17,16 +16,16 @@ pio.templates.default = "simple_white"
 
 
 class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
-    """
-    Extenstion of plotly's graphical object figurewidget library
-    with custom plots for SPC between mulitple sites,
-    adds meanlines and violin plots etc.
+    """Extenstion of plotly's graphical object figurewidget library.
+
+    Custom plots for SPC between mulitple sites,
+    i.e can add meanlines and violin plots if requested.
     """
 
     def __init__(
         self, *args: str, title: Optional[str] = None, **kwargs: str
     ) -> None:
-        """Override __init__ method to add title at creation
+        """Override __init__ method to add title at creation.
 
         Parameters
         ----------
@@ -37,7 +36,6 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
         **kwargs : str
             FigureWidget **kwargs
         """
-
         # self.log object
         self.log: logging.Logger = logging.getLogger(__name__)
 
@@ -51,7 +49,10 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
         meanline: bool = False,
         violin: bool = False,
     ):
-        """Pass a list of dataframes to plot for multiple sites
+        """Plot an xbar graph for a single test on to the figure.
+
+        Pass a list of dataframes to plot for multiple sites
+
         Data sets must by pandas dataframes with index = Unit SN
         and column = 'Reading'
         Test is a series = Test_Name, Min_Tol, Max_Tol, Units
@@ -69,9 +70,7 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
             Plot meanline, default is False
         violin : bool, optional
             Plot violin, default is False
-
         """
-
         if not isinstance(datasets, dict):
             # if not a dict then raise an error
             self.log.error(

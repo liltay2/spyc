@@ -1,6 +1,6 @@
-"""Importing and manipualting
-test data for individual part numbers,
-some basic structure to call on the SPCFigure library
+"""Object for individual part numbers.
+
+Some basic structure to call on the SPCFigure library etc.
 """
 
 # Imports
@@ -14,10 +14,9 @@ from .spcfigure import SPCFigure  # type: ignore
 
 
 class PartNumber:
-    """
-    Object to represent a single part number
-    and its associated test data and methods
+    """Object to represent a single part number.
 
+    Includes associated test data and methods
     See "Dummy Data.xlsx" for an example input data file
 
     Deleted Attributes
@@ -34,7 +33,7 @@ class PartNumber:
     """
 
     def __init__(self, filepath: str) -> None:
-        """Set up logging and read in data from filepath
+        """Set up logging and read in data from filepath.
 
         Parameters
         ----------
@@ -109,11 +108,10 @@ class PartNumber:
 
         except ValueError as e:
             self.log.warning(f"{filepath} failed to load\n{e}")
-            raise ValueError(e)
+            raise ValueError from e
 
     def __repr__(self):
-        """__repr__"""
-
+        """Override the __repr__ function with a friendly output."""
         return (
             f"PN: {self.header['Part Number']}, locations ="
             f" {list(self.data.keys())}"
@@ -126,7 +124,7 @@ class PartNumber:
         capability_loc: Optional[str] = None,
         **kwargs: bool,
     ):
-        """Plot an xbar chart (value against SN) using SPCFigure module
+        """Plot an xbar chart (value against SN) using SPCFigure module.
 
         Args:
             location (Optional[Union[str, list[str]]], optional): Sheetname(s)
@@ -139,9 +137,7 @@ class PartNumber:
             violin (bool, optional): Plot a violin for each location
                 off bv default
             to plot data for, default is to plot all locations
-
         """
-
         # List to hold all plots
         figs = []
 
@@ -183,8 +179,9 @@ class PartNumber:
         capability_loc: Optional[str] = None,
         **kwargs: bool,
     ):
-        """Plot an xbar chart (value against SN),
-         using SPCFigure module for a single tes
+        """Plot an xbar chart (value against SN) for 1 test.
+
+        Uses SPCFigure module.
 
         Args:
             test_id (str): id of the test in test list to plot
@@ -197,7 +194,6 @@ class PartNumber:
             violin (bool, optional): Plot a violin for each location
                 off bv default
             to plot data for, default is to plot all locations
-
         """
         # Enforce string type
         test_id = str(test_id)
@@ -249,7 +245,6 @@ class PartNumber:
             # set capability_loc for the single location requested
             if capability_loc is None:
                 capability_loc = location
-
         # Create figure to write too
         fig = SPCFigure(
             title=f"""{self.header['Part Number']}-{self.tests.loc[test_id,'Test_Name']},
@@ -287,7 +282,7 @@ class PartNumber:
         return fig
 
     def get_limits(self, test_id: str) -> tuple[float, float]:
-        """Get upper and lower spec limits
+        """Get upper and lower spec limits.
 
         Args:
             test_id (str): Test id in test list
@@ -311,11 +306,13 @@ class PartNumber:
         usl: Union[int, float, None],
         lsl: Union[int, float, None],
     ) -> Tuple[float, float]:
-        """Calculate capability for a dataset filtered to a single test and location
+        """Calculate capability for a dataset.
+
+        Must be filtered to a single test and location
 
         Args:
             test_dataset (pd.DataFrame): Dataset reduced to a single test
-            usl (Union[int, float, None]): Upper Spec Limit
+           usl (Union[int, float, None]): Upper Spec Limit
             lsl (Union[int, float, None]): Lower Spec Limit
 
         """
@@ -343,8 +340,8 @@ class PartNumber:
 
     @staticmethod
     def extract_test(dataset: pd.DataFrame, test_id: str) -> pd.DataFrame:
-        """
-        returns a dataset in the format needed by SPCFigure:
+        """Return a dataset in the format needed by SPCFigure.
+
            * 1 location
            * 1 test
            * all SNs
