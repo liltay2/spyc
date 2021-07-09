@@ -41,9 +41,9 @@ jobs:
             run: poetry install --no-interaction
 
 
-          - name: Run tox and build
+          - name: Run tox
             run: |
-                make build
+                python -m tox
 
           - name: Generate Coverage Report
             run: |
