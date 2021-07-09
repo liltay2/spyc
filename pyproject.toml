@@ -7,7 +7,7 @@ readme = "README.MD"
 homepage="https://github.com/fanoway/spyc"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.8"
 plotly = "^5.1.0"
 numpy = "^1.21.0"
 pandas = "^1.3.0"
