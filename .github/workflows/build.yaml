@@ -40,7 +40,7 @@ jobs:
 
           - name: Generate Coverage Report
             run: |
-              poetry run coverage run -m spyc
+              poetry run coverage run spyc
 
           - name: "Upload coverage to Codecov"
             uses: codecov/codecov-action@v1
