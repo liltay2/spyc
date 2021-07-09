@@ -256,8 +256,8 @@ def plot(arguments: Dict[str, str]):
                     or arguments["--capability_loc"] is None
                 ):
 
-                    meanline: bool = arguments["--meanline"]
-                    violin: bool = arguments["--violin"]
+                    meanline: bool = bool(arguments["--meanline"])
+                    violin: bool = bool(arguments["--violin"])
 
                     # Plots for all sites all tests,
                     # calculate capability for Portland
