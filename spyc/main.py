@@ -10,7 +10,7 @@ Options:
     --version              Show version.
     -v --verbose           Verbose
     -d --debug             Debug Output
-"""
+"""  # noqa
 
 # Imports
 
@@ -24,9 +24,10 @@ from rich.markdown import Markdown
 from rich_dataframe import prettify  # type: ignore
 from docopt import docopt  # type: ignore
 import pandas as pd  # type: ignore
-import dash
-import dash_core_components as dcc
-import dash_html_components as html
+
+# import dash
+# import dash_core_components as dcc
+# import dash_html_components as html
 
 
 # these imports will not work if ran as a script
@@ -41,7 +42,7 @@ valid_types = ["xbar"]
 
 
 def make_parts(filepath: str) -> list[PartNumber]:
-    """Create lsit of parts in the target directory
+    """Create list of parts in the target directory.
 
     Args:
         filepath (str): Directory to look within
@@ -49,7 +50,6 @@ def make_parts(filepath: str) -> list[PartNumber]:
     Returns:
         list[PartNumber]: Partslist
     """
-
     # Look up xlsx file in the specified directory
     data_files = glob.glob(f"{filepath}/*.xlsx")
 
