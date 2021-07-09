@@ -7,10 +7,10 @@ Some basic structure to call on the SPCFigure library etc.
 
 import statistics
 import logging
-from typing import Union, Tuple, Optional
+from typing import Union, Tuple, Optional, List, Dict, Any
 import pandas as pd  # type: ignore
 import numpy as np
-from .spcfigure import SPCFigure  # type: ignore
+from .spcfigure import SPCFigure
 
 
 class PartNumber:
@@ -130,11 +130,11 @@ class PartNumber:
 
     def xbar(
         self,
-        location: Optional[Union[str, list[str]]] = None,
+        location: Optional[Union[str, List[str]]] = None,
         test_id: Optional[str] = None,
         capability_loc: Optional[str] = None,
-        **kwargs: bool,
-    ) -> dict[str, SPCFigure]:
+        **kwargs: Any,
+    ) -> Dict[str, SPCFigure]:
         """Plot an xbar chart (value against SN) using SPCFigure module.
 
         Args:
@@ -185,7 +185,7 @@ class PartNumber:
         test_id: str,
         location: Optional[Union[str, list[str]]] = None,
         capability_loc: Optional[str] = None,
-        **kwargs: bool,
+        **kwargs: Any,
     ) -> Tuple[str, SPCFigure]:
         """Plot an xbar chart (value against SN) for 1 test.
 
