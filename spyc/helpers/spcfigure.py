@@ -3,7 +3,7 @@
 # Imports
 import statistics
 import logging
-from typing import Optional
+from typing import Optional, List, Dict, Any
 import pandas as pd  # type: ignore
 import plotly.graph_objects as go  # type: ignore
 import plotly.io as pio  # type: ignore
@@ -23,7 +23,7 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
     colour_list = ["#fbaf00", "#007cbe", "#ffd639", "#ffa3af", "#00af54"]
 
     def __init__(
-        self, *args: str, title: Optional[str] = None, **kwargs: str
+        self, *args: str, title: Optional[str] = None, **kwargs: Any
     ) -> None:
         """Override __init__ method to add title at creation.
 
@@ -33,7 +33,7 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
             FigureWidget *args
         title : Optional[str], optional
             title to include on plot
-        **kwargs : str
+        **kwargs : Any
             FigureWidget **kwargs
         """
         # self.log object
@@ -44,7 +44,7 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
 
     def xbar_plot(
         self,
-        datasets: dict[str, pd.DataFrame],
+        datasets: Dict[str, pd.DataFrame],
         test: pd.Series,
         meanline: bool = False,
         violin: bool = False,
