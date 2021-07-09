@@ -27,8 +27,8 @@ jobs:
           - name: Install Poetry
             run: pip install poetry
             
-          - name: tox-gh actions
-            run: pip install tox-gh-actions
+          - name: tox-gh actions and coverage
+            run: pip install tox-gh-actions coverage
 
           - name: Install dependencies
             if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
@@ -40,7 +40,7 @@ jobs:
 
           - name: Generate Coverage Report
             run: |
-              coverage run -m spyc.spyc
+              poetry run coverage run -m spyc.spyc
 
           - name: "Upload coverage to Codecov"
             uses: codecov/codecov-action@v1
