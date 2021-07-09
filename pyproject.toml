@@ -63,5 +63,6 @@ commands =
 	poetry run pylint spyc/ -E
 	poetry run mypy spyc/
 	poetry run pytest --cov=spyc tests/
+	poetry run coverage run -m spyc
 
 """
