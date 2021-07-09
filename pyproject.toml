@@ -44,6 +44,8 @@ line-length = 79
 legacy_tox_ini = """
 [tox]
 isolated_build = True
+isolated_build_env = testenv
+envlist = py38, py39
 
 [tox:.package]
 # note tox will use the same python version as under what tox is installed to package
