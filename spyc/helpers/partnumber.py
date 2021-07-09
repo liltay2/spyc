@@ -39,6 +39,11 @@ class PartNumber:
         ----------
         filepath : str
             path to data file
+
+        Raises
+        ------
+        ValueError
+            Description
         """
         # self.log object
         self.log: logging.Logger = logging.getLogger(__name__)
@@ -110,8 +115,14 @@ class PartNumber:
             self.log.warning(f"{filepath} failed to load\n{e}")
             raise ValueError from e
 
-    def __repr__(self):
-        """Override the __repr__ function with a friendly output."""
+    def __repr__(self) -> str:
+        """Override the __repr__ function with a friendly output.
+
+        Returns
+        -------
+        str
+            String representation of the partnumber object
+        """
         return (
             f"PN: {self.header['Part Number']}, locations ="
             f" {list(self.data.keys())}"
@@ -123,7 +134,7 @@ class PartNumber:
         test_id: Optional[str] = None,
         capability_loc: Optional[str] = None,
         **kwargs: bool,
-    ):
+    ) -> dict[str, SPCFigure]:
         """Plot an xbar chart (value against SN) using SPCFigure module.
 
         Args:
@@ -139,38 +150,35 @@ class PartNumber:
             to plot data for, default is to plot all locations
         """
         # List to hold all plots
-        figs = []
+        figs = {}
 
         if test_id is None:
             self.log.debug("Plotting all tests")
             # Plot all tests
             for t_id in self.tests.index.get_level_values(0).unique():
                 self.log.debug(f"Plotting test = {t_id}")
-                figs.append(
-                    self.xbar_plot(
-                        str(t_id),
-                        location=location,
-                        capability_loc=capability_loc,
-                        **kwargs,
-                    )
+                title, fig = self.xbar_plot(
+                    str(t_id),
+                    location=location,
+                    capability_loc=capability_loc,
+                    **kwargs,
                 )
+                figs[title] = fig
 
         else:
             # Plot one test
             self.log.debug(f"Single Plot, test = {test_id}")
 
-            figs.append(
-                self.xbar_plot(
-                    str(test_id),
-                    location=location,
-                    capability_loc=capability_loc,
-                    **kwargs,
-                )
+            title, fig = self.xbar_plot(
+                str(test_id),
+                location=location,
+                capability_loc=capability_loc,
+                **kwargs,
             )
 
-        # Display all figures generated
-        for fig in figs:
-            fig.show()
+            figs[title] = fig
+
+        return figs
 
     def xbar_plot(
         self,
@@ -178,7 +186,7 @@ class PartNumber:
         location: Optional[Union[str, list[str]]] = None,
         capability_loc: Optional[str] = None,
         **kwargs: bool,
-    ):
+    ) -> Tuple[str, SPCFigure]:
         """Plot an xbar chart (value against SN) for 1 test.
 
         Uses SPCFigure module.
@@ -245,14 +253,15 @@ class PartNumber:
             # set capability_loc for the single location requested
             if capability_loc is None:
                 capability_loc = location
+
         # Create figure to write too
-        fig = SPCFigure(
-            title=(
-                f"{self.header['Part Number']}"
-                f"-{self.tests.loc[test_id,'Test_Name']},{capability_loc}"
-                f" Cp/Cpk={cp:.2f}/{cpk:.2f}"
-            )
+        title = (
+            f"{self.header['Part Number']}  "
+            f"{self.tests.loc[test_id,'Test_Name']}  {capability_loc}"
+            f"  Cp/Cpk={cp:.2f}/{cpk:.2f}"
         )
+
+        fig = SPCFigure(title=title)
 
         # extract test to plot
 
@@ -282,7 +291,7 @@ class PartNumber:
             violin=kwargs.get("violin", False),
         )
 
-        return fig
+        return title, fig
 
     def get_limits(self, test_id: str) -> tuple[float, float]:
         """Get upper and lower spec limits.

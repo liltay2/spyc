@@ -25,18 +25,21 @@ from rich_dataframe import prettify  # type: ignore
 from docopt import docopt  # type: ignore
 import pandas as pd  # type: ignore
 
-# import dash
-# import dash_core_components as dcc
-# import dash_html_components as html
-
+import dash
+import dash_core_components as dcc
+import dash_html_components as html
+from dash.dependencies import Input, Output
 
 # these imports will not work if ran as a script
 # use python -m main
 from .__init__ import __version__  # type: ignore
 from .helpers.partnumber import PartNumber
+from .helpers.spcfigure import SPCFigure
 
 # create logger
 log = logging.getLogger(__name__)
+
+external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 
 
 def make_parts(filepath: str) -> list[PartNumber]:
@@ -63,6 +66,60 @@ def make_parts(filepath: str) -> list[PartNumber]:
             log.warning(e)
 
     return parts
+
+
+def dash_app(
+    part_dict: dict[PartNumber, dict[str, SPCFigure]], debug: bool = False
+):
+    """Create a dash app."""
+    app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+
+    # build dict for part slection drop down
+    part_dd_options = []
+    for part in list(part_dict.keys()):
+
+        part_dd_options.append(
+            {
+                "label": part.header["Part Number"],
+                "value": part.header["Part Number"],
+            }
+        )
+
+    disp_elements = [
+        html.H1(children="SPYC"),
+        html.Div(
+            [
+                dcc.Dropdown(
+                    id="part_dd",
+                    options=part_dd_options,
+                    placeholder="Select a Part Number",
+                    clearable=False,
+                )
+            ]
+        ),
+        html.Div(id="part_dd-output-container"),
+    ]
+
+    @app.callback(
+        Output("part_dd-output-container", "children"),
+        [Input("part_dd", "value")],
+    )
+    def display_graphs(value):
+        """Display graphs selected by part number dropdown."""
+        elements = []
+        for part, figs in part_dict.items():
+            # check if correct part
+            if part.header["Part Number"] == value:
+                # Add all plots for the one selected pn
+                elements.append(html.H2(children=f"{part}"))
+                for title, fig in figs.items():
+                    elements.append(dcc.Graph(id=title, figure=fig))
+
+        return elements
+
+    app.layout = html.Div(children=disp_elements)
+
+    app.run_server(debug=debug)
 
 
 @entry
@@ -157,7 +214,13 @@ def main():
 
         log.debug(f"Looking in dir: {filepath}")
 
-        for part in make_parts(filepath):
+        parts = make_parts(filepath)
+
+        # Dictionary of part numbers and figures
+        # {PartNumber: {title: fig}}
+        part_dict = {}
+
+        for part in parts:
 
             # Raw Data
             vprint(f"# {part.header['Part Number']}", md=True)
@@ -179,6 +242,8 @@ def main():
                     clear_console=False,
                 )
 
+            # launch dash interface
+
             if arguments["xbar"]:
                 log.info("xbar plot")
 
@@ -195,20 +260,24 @@ def main():
                 ) or locations is None:
 
                     # Check capability_loc input
-                    if (
+                    if locations is None or (
                         arguments["--capability_loc"] in locations
                         or arguments["--capability_loc"] is None
                     ):
 
                         # Plots for all sites all tests,
                         # calculate capability for Portland
-                        part.xbar(
+                        figs = part.xbar(
                             location=locations,
                             test_id=arguments["--test_id"],
                             capability_loc=arguments["--capability_loc"],
                             meanline=arguments["--meanline"],
                             violin=arguments["--violin"],
                         )
+
+                        # Add figs to part_dict
+                        part_dict[part] = figs
+
                     else:
                         log.error(
                             "Invalid capability_loc passed for PN:"
@@ -227,6 +296,9 @@ def main():
                         f" {part.data.keys()}"
                     )
                     raise ValueError("Invalid locations")
+
+        # Launch dash app
+        dash_app(part_dict, debug=arguments["--debug"])
 
 
 # Catch esceptions to use them as breakpoints

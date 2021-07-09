@@ -111,42 +111,41 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
         # loop through datasets and plot
         # Counter for colours so meanline and violinmatch in each legend group
         colour_count = 0
-        for key, dataset in datasets.items():
+        for location, data in datasets.items():
             colour = self.colour_list[
                 colour_count
             ]  # Get colour for this dataset
-            legend_name = key
 
             # Marker style to flag OOT data
-            dataset["Marker"] = [
+            data["Marker"] = [
                 "x" if x < lsl or x > usl else "circle"
-                for x in dataset["Reading"]
+                for x in data["Reading"]
             ]
 
             # Plot data
             self.add_trace(
                 go.Scatter(
-                    x=dataset.index,
-                    y=dataset["Reading"],
+                    x=data.index,
+                    y=data["Reading"],
                     mode="lines+markers",
-                    name="Raw Data",
-                    marker_symbol=dataset["Marker"],
+                    name=location,
+                    marker_symbol=data["Marker"],
                     marker=dict(
                         size=12, line=dict(width=2, color="DarkSlateGrey")
                     ),
-                    legendgroup=legend_name,
-                    legendgrouptitle_text=legend_name,
+                    legendgroup=location,
+                    legendgrouptitle_text=location,
                     line=dict(color=colour, width=4),
                 )
             )
 
             if meanline:
                 self.add_hline(
-                    y=statistics.mean(dataset["Reading"]),
+                    y=statistics.mean(data["Reading"]),
                     line_dash="dash",
                     annotation_text=(
-                        f"{legend_name}-Mean ="
-                        f" {statistics.mean(dataset['Reading']):.2f}"
+                        f"{location}-Mean ="
+                        f" {statistics.mean(data['Reading']):.2f}"
                     ),
                     annotation_position="top right",
                     line_color=colour,
@@ -156,11 +155,12 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
             if violin:
                 self.add_trace(
                     go.Violin(
-                        y=dataset["Reading"],
+                        y=data["Reading"],
                         meanline_visible=True,
                         line=dict(color=colour),
-                        legendgroup=legend_name,
+                        legendgroup=location,
                         name="Distribution",
+                        showlegend=False,
                     )
                 )
             colour_count += 1  # increment colour counter
