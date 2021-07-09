@@ -183,7 +183,7 @@ class PartNumber:
     def xbar_plot(
         self,
         test_id: str,
-        location: Optional[Union[str, list[str]]] = None,
+        location: Optional[Union[str, List[str]]] = None,
         capability_loc: Optional[str] = None,
         **kwargs: Any,
     ) -> Tuple[str, SPCFigure]:
