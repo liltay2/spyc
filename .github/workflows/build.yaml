@@ -43,7 +43,7 @@ jobs:
 
           - name: Run tox
             run: |
-                python -m tox
+                poetry run python -m tox
 
           - name: Generate Coverage Report
             run: |
