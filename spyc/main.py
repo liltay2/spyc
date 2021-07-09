@@ -38,8 +38,6 @@ from .helpers.partnumber import PartNumber
 # create logger
 log = logging.getLogger(__name__)
 
-valid_types = ["xbar"]
-
 
 def make_parts(filepath: str) -> list[PartNumber]:
     """Create list of parts in the target directory.
