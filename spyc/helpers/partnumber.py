@@ -293,14 +293,14 @@ class PartNumber:
 
         return title, fig
 
-    def get_limits(self, test_id: str) -> tuple[float, float]:
+    def get_limits(self, test_id: str) -> Tuple[float, float]:
         """Get upper and lower spec limits.
 
         Args:
             test_id (str): Test id in test list
 
         Returns:
-            tuple[float, float]: USL, LSL
+            Tuple[float, float]: USL, LSL
         """
         lsl = self.tests.loc[test_id]["Min_Tol"]
         usl = self.tests.loc[test_id]["Max_Tol"]
