@@ -10,7 +10,7 @@ jobs:
       runs-on: ${{ matrix.os }}
       strategy:
         matrix:
-          os: [ubuntu-latest, windows-latest]
+          os: [ubuntu-latest, windows-latest, macos-latest]
           python-version: [3.8, 3.9]
       env:
           USING_COVERAGE: "3.9"
@@ -33,7 +33,7 @@ jobs:
 
           - name: Run tox
             run: |
-                poetry run python -m tox
+                poetry run python -m tox -e py
 
           - name: Generate Coverage Report
             run: |
