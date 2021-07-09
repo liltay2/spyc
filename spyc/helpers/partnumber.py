@@ -306,8 +306,8 @@ class PartNumber:
     @staticmethod
     def calculate_capability(
         test_dataset: pd.DataFrame,
-        usl: Union[int, float, None],
         lsl: Union[int, float, None],
+        usl: Union[int, float, None],
     ) -> Tuple[float, float]:
         """Calculate capability for a dataset.
 

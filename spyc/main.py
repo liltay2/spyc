@@ -1,7 +1,7 @@
 """SPYC (pronounced spicy).
 
 Usage:
-    spyc plot <dir> [--verbose|--debug]
+    spyc plot xbar <dir> [<location>]... [--test_id=<id>] [--capability_loc=<loc>] [--verbose|--debug] [--meanline] [--violin]
     spyc -h | --help
     spyc --version
 
@@ -36,6 +36,8 @@ from .helpers.partnumber import PartNumber
 
 # create logger
 log = logging.getLogger(__name__)
+
+valid_types = ["xbar"]
 
 
 def make_parts(filepath: str) -> list[PartNumber]:
@@ -72,7 +74,6 @@ def main():
     arguments = docopt(__doc__, version=f"SPYC {__version__}")
 
     # console config for rich outputs
-
     console = Console()
 
     # Manage verbose and debug output levels
@@ -150,9 +151,13 @@ def main():
 
         # ensure path is absolute
         if os.path.isabs(arguments["<dir>"]):
+            log.debug("dir input is absolute")
             filepath = arguments["<dir>"]
         else:
+            log.debug("dir input is not absolute")
             filepath = os.path.abspath(arguments["<dir>"])
+
+        log.debug(f"Looking in dir: {filepath}")
 
         for part in make_parts(filepath):
 
@@ -176,23 +181,58 @@ def main():
                     clear_console=False,
                 )
 
-            # Plots for all sites all tests,
-            # calculate capability for Portland
-            part.xbar(capability_loc="Portland", meanline=True, violin=True)
+            if arguments["xbar"]:
+                log.info("xbar plot")
 
-            # Plots for 1 site 1 test
-            part.xbar(
-                location="Miami", test_id=1.1, meanline=True, violin=True
-            )
+                # if location argument is empty the nreplace it with None
+                if arguments["<location>"]:
+                    locations = arguments["<location>"]
+                else:
+                    locations = None
 
-            # Plots for both sites 1 test
-            part.xbar(
-                location=["Miami", "Portland"], test_id=2.0, meanline=True
-            )
+                # Check locations are all in the PartNumber object
+                if (
+                    locations is not None
+                    and set(locations).issubset(set(part.data.keys()))
+                ) or locations is None:
 
-    if arguments["dash"]:
-        log.info("Launching Dash App")
-        run_dash_app(arguments)
+                    # Check capability_loc input
+                    if (
+                        arguments["--capability_loc"] in locations
+                        or arguments["--capability_loc"] is None
+                    ):
+
+                        # Plots for all sites all tests,
+                        # calculate capability for Portland
+                        part.xbar(
+                            location=locations,
+                            test_id=arguments["--test_id"],
+                            capability_loc=arguments["--capability_loc"],
+                            meanline=arguments["--meanline"],
+                            violin=arguments["--violin"],
+                        )
+                    else:
+                        log.error(
+                            "Invalid capability_loc passed for PN:"
+                            f" {part.header['Part Number']}\ncapability_loc"
+                            " passed as :"
+                            f" {arguments['--capability_loc']}\nLocations in"
+                            f" input: {locations}"
+                        )
+                        raise ValueError("Invalid capability_loc")
+
+                else:
+                    log.error(
+                        "Invalid Locations passed for PN:"
+                        f" {part.header['Part Number']}\nLocations passed as"
+                        f" argument: {locations}\nLocations in data files:"
+                        f" {part.data.keys()}"
+                    )
+                    raise ValueError("Invalid locations")
 
 
-main()
+# Catch esceptions to use them as breakpoints
+try:
+    main()
+except Exception as e:
+    log.error(e)
