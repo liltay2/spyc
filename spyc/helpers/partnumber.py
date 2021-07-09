@@ -67,7 +67,7 @@ class PartNumber:
             xls = pd.ExcelFile(filepath)
 
             # Generic header infomation
-            self.header: dict[str, str] = (
+            self.header: Dict[str, str] = (
                 pd.read_excel(
                     xls, sheet_name="Header", header=0, dtype=col_dtype
                 )
@@ -85,7 +85,7 @@ class PartNumber:
             self.log.debug(self.tests.head(5))
 
             # Data from each site. Store in dict with key as sheetname
-            self.data: dict[str, pd.DataFrame] = {}  # empty dict
+            self.data: Dict[str, pd.DataFrame] = {}  # empty dict
             for sheet_name in xls.sheet_names:
 
                 if sheet_name not in [
