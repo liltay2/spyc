@@ -17,7 +17,7 @@ Options:
 import os
 import glob
 import logging
-from typing import Optional
+from typing import Optional, List, Dict, Any
 
 from mainentry import entry
 from rich.console import Console
@@ -67,7 +67,7 @@ if arguments["--verbose"] or arguments["--debug"]:
         else:
             console.print(string)
 
-    def vprettify(df: pd.DataFrame, **kwargs):
+    def vprettify(df: pd.DataFrame, **kwargs: Any):
         """Table printing for verbose/debug.
 
         Parameters
@@ -99,7 +99,7 @@ else:
         """
         # pylint: disable=unused-argument
 
-    def vprettify(df: pd.DataFrame, **kwargs):
+    def vprettify(df: pd.DataFrame, **kwargs: Any):
         """If not verbose dummy vprettify.
 
         Parameters
@@ -115,7 +115,7 @@ else:
     logging.basicConfig(format="%(levelname)s: %(message)s", level=30)
 
 
-def make_parts(filepath: str) -> list[PartNumber]:
+def make_parts(filepath: str) -> List[PartNumber]:
     """Create list of parts in the target directory.
 
     Args:
@@ -141,7 +141,7 @@ def make_parts(filepath: str) -> list[PartNumber]:
     return parts
 
 
-def dash_app(part_dict: dict[PartNumber, dict[str, SPCFigure]], debug=False):
+def dash_app(part_dict: Dict[PartNumber, Dict[str, SPCFigure]], debug=False):
     """Create a dash app."""
     app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
@@ -175,7 +175,7 @@ def dash_app(part_dict: dict[PartNumber, dict[str, SPCFigure]], debug=False):
         Output("part_dd-output-container", "children"),
         [Input("part_dd", "value")],
     )
-    def display_graphs(value):
+    def display_graphs(value: str):
         """Display graphs selected by part number dropdown."""
         elements = []
         for part, figs in part_dict.items():
@@ -193,7 +193,7 @@ def dash_app(part_dict: dict[PartNumber, dict[str, SPCFigure]], debug=False):
     app.run_server(debug=debug)
 
 
-def plot(arguments: dict[str, str]):
+def plot(arguments: Dict[str, str]):
     """Plot graphs from imported data."""
     # ensure path is absolute
     if os.path.isabs(arguments["<dir>"]):
