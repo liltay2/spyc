@@ -3,7 +3,7 @@
 # Imports
 import statistics
 import logging
-from typing import Optional, List, Dict, Any
+from typing import Optional, Dict, Any
 import pandas as pd  # type: ignore
 import plotly.graph_objects as go  # type: ignore
 import plotly.io as pio  # type: ignore
