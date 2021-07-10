@@ -11,6 +11,12 @@
       -v --verbose           Verbose
       -d --debug             Debug Output
   
+  Attributes:
+      arguments (TYPE): Description
+      console (TYPE): Description
+      external_stylesheets (list): Description
+      log (TYPE): Description
+  
   """  # noqa
 
 # Imports
@@ -19,6 +25,7 @@ import os
 import glob
 import logging
 from typing import Optional, List, Dict, Any, Union
+import json
 
 from mainentry import entry
 from rich.console import Console
@@ -47,7 +54,9 @@ arguments = docopt(__doc__, version=f"SPYC {__version__}")
 
 external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 
-plot_types: List[str] = ["xbar"]
+# Get plot options from json source file
+with open("spyc/plot_options.json") as f:
+    plot_types: Dict[str, Any] = json.load(f)
 
 # Manage verbose and debug output levels
 if arguments["--verbose"]:
@@ -64,20 +73,14 @@ else:
 def make_parts(filepath: str) -> Dict[str, PartNumber]:
     """Create list of parts in the target directory.
 
-    Parameters
-    ----------
-    filepath : str
-        Directory to look within
+    Args:
+        filepath (str): Directory to look within
 
-    Returns
-    -------
-    Dict[str, PartNumber]
-        Partslist, key is part number string
+    Returns:
+        Dict[str, PartNumber]: Partslist, key is part number string
 
-    Raises
-    ------
-    ValueError
-        Description
+    Raises:
+        ValueError: Description
     """
 
     if not os.path.isabs(filepath):
@@ -113,17 +116,12 @@ def make_parts(filepath: str) -> Dict[str, PartNumber]:
 def dash_app(filepath: str, debug: bool = False):
     """Create a dash app.
 
-    Parameters
-    ----------
-    filepath : str
-        Description
-    debug : bool, optional
-        Description
+    Args:
+        filepath (str): Description
+        debug (bool, optional): Description
 
-    Raises
-    ------
-    FileNotFoundError
-        Description
+    Raises:
+        FileNotFoundError: Description
     """
     app = dash.Dash(
         __name__, external_stylesheets=external_stylesheets, title="SPYC"
@@ -138,34 +136,72 @@ def dash_app(filepath: str, debug: bool = False):
             f"No Parts generated from dir = {arguments['<dir>']}"
         )
 
-    # build dict for part selection drop down
+    # Build dict for part selection drop down
     part_dd_options = []
     for pn in list(part_dict.keys()):
 
         part_dd_options.append({"label": pn, "value": pn})
 
-    # elements to always dispaly. The rest are generate by the code
+    # Elements to always display. The rest are generate by the code
     disp_elements = [
         html.H1(children="SPYC"),
-        html.Div(
-            [
-                dcc.Dropdown(
-                    id="part_dd",
-                    options=part_dd_options,
-                    placeholder="Select a Part Number",
-                    clearable=True,
-                )
-            ]
+        dcc.Dropdown(
+            id="part_dd",
+            options=part_dd_options,
+            placeholder="Select a Part Number",
+            clearable=True,
         ),
-        html.Div(id="part_dd_container"),
-        html.Div(id="loc_dd_container"),
+        html.Div(id="loc_title"),
+        dcc.Checklist(id="loc_dd", labelStyle={"display": "inline-block"}),
+        dcc.Dropdown(
+            id="test_dd",
+            placeholder="Select tests to plot, leave blank to plot all",
+            multi=True,
+            clearable=True,
+        ),
+        dcc.RadioItems(id="plot_dd", labelStyle={"display": "inline-block"}),
+        html.Div(id="cap_title"),
+        dcc.RadioItems(
+            id="cap_dd", labelStyle={"display": "inline-block"}, value="None"
+        ),
         html.Div(id="fig_container"),
     ]
 
+    @app.callback(Output("loc_title", "children"), Input("part_dd", "value"))
+    def show_loc_title(pn: str) -> str:
+        """Show location title only if PN is selected.
+
+        Args:
+            pn (str): pn to plot
+
+        Returns:
+            str: location title
+        """
+        if pn:
+            return "Plot data for:"
+
     @app.callback(
-        Output("part_dd_container", "children"), [Input("part_dd", "value")]
+        Output("cap_title", "children"),
+        [Input("part_dd", "value"), Input("plot_dd", "value")],
     )
-    def get_loc(value: str) -> dcc.Dropdown:
+    def show_cap_title(pn: str, ptype: str) -> str:
+        """Show location title only if PN is selected. And plot allows capability
+
+        Args:
+            pn (str): pn to plot
+            ptype (str): plot type
+
+        Returns:
+            str: Capability title
+        """
+        if pn and ptype:
+            if plot_types[ptype]["capability"]:
+                return "Measure capability from:"
+        else:
+            return ""
+
+    @app.callback(Output("loc_dd", "options"), [Input("part_dd", "value")])
+    def get_loc(value: str) -> List[Dict[str, str]]:
         """Display graphs selected by part number dropdown.
 
         Parameters
@@ -175,53 +211,112 @@ def dash_app(filepath: str, debug: bool = False):
 
         Returns
         -------
-        dcc.Dropdown
-            Dropdown of locations
+        List[Dict[str:str]]
+            checklist options for locations
         """
 
-        # get part to plot from drop down value
+        loc_dd_options = []
+
         if value is not None:
+
             part = part_dict[value]
 
             # build dict for part slection drop down
-            loc_dd_options = [{"label": "All", "value": "All"}]
+
             for loc in list(part.data.keys()):
                 loc_dd_options.append({"label": loc, "value": loc})
 
-            return dcc.Dropdown(
-                id="loc_dd",
-                options=loc_dd_options,
-                placeholder="Select location(s)",
-                clearable=True,
-                multi=True,
-            )
+            return loc_dd_options
+        return []
 
-    @app.callback(
-        Output("loc_dd_container", "children"), [Input("loc_dd", "value")]
-    )
-    def get_plot_type(value: str) -> dcc.Dropdown:
+    @app.callback(Output("test_dd", "options"), [Input("part_dd", "value")])
+    def get_test_id(pn: str) -> List[Dict[str, str]]:
         """Display plot types avaialable.
 
         Parameters
         ----------
-        value : str
-            Description
+        pn: str
+            Part Number to plot
 
         Returns
         -------
-        dcc.Dropdown
-            Description
+        List[Dict[str,str]]
+            Dropdown options for tests types
         """
+        if pn:
+            test_dd_options = []
+            # get part
+            part = part_dict[pn]
 
-        plot_dd_options = []
-        for ptype in plot_types:
-            plot_dd_options.append({"label": ptype, "value": ptype})
+            for test_id in part.tests.index.get_level_values(0).unique():
+                test_dd_options.append(
+                    {
+                        "label": part.tests.loc[test_id]["Test_Name"],
+                        "value": test_id,
+                    }
+                )
 
-        return dcc.Dropdown(
-            id="plot_dd",
-            options=plot_dd_options,
-            placeholder="Select desired plot type:",
-        )
+            return test_dd_options
+
+        return []
+
+    @app.callback(Output("plot_dd", "options"), [Input("loc_dd", "value")])
+    def get_plot_type(locs: List[str]) -> List[Dict[str, str]]:
+        """Display plot types avaialable.
+
+        Parameters
+        ----------
+        locs: List[str]
+            List of Locations selected
+
+        Returns
+        -------
+        List[Dict[str,str]]
+            Radio options for plot types
+        """
+        if locs:
+            plot_dd_options = []
+            for ptype in plot_types:
+                # Filter Plot Options Based On Maximum # Locations to plot
+                max_locs = plot_types[ptype]["max_locs"]
+
+                if max_locs is None or max_locs >= len(locs):
+                    plot_dd_options.append({"label": ptype, "value": ptype})
+
+            return plot_dd_options
+
+        return []
+
+    @app.callback(
+        Output("cap_dd", "options"),
+        [Input("loc_dd", "value"), Input("plot_dd", "value")],
+    )
+    def get_capability_loc(
+        locs: List[str], ptype: str
+    ) -> List[Dict[str, str]]:
+        """Display plot types avaialable.
+
+        Parameters
+        ----------
+        locs: List[str]
+            List of Locations selected
+        ptype: str
+            Selected plot type
+
+        Returns
+        -------
+        List[Dict[str,str]]
+            Radio options for capability location
+        """
+        if locs and ptype and plot_types[ptype]["capability"]:
+            cap_dd_options = [{"label": "None", "value": "None"}]
+
+            for loc in locs:
+                cap_dd_options.append({"label": loc, "value": loc})
+
+            return cap_dd_options
+
+        return []
 
     @app.callback(
         Output("fig_container", "children"),
@@ -229,34 +324,55 @@ def dash_app(filepath: str, debug: bool = False):
             Input("part_dd", "value"),
             Input("loc_dd", "value"),
             Input("plot_dd", "value"),
+            Input("test_dd", "value"),
+            Input("cap_dd", "value"),
         ],
     )
-    def plot_figure(pn: str, locs: List[str], ptype: str):
+    def plot_figure(
+        pn: str,
+        locs: List[str],
+        ptype: str,
+        test_id: List[str],
+        capability_loc: str,
+    ) -> List[Any]:
         """plot the figures.
 
-        Parameters
-        ----------
-        pn : str
-            Part Number to plot
-        locs : str
-            Lcoations to plot
-        ptype : str
-            Type of plot
-        """
-        # Get all inputs first
-        if locs is not None and pn is not None and ptype is not None:
+        Args:
+            pn (str): Part Number to plot
+            locs (List[str]): Locations to plot
+            ptype (str): Type of plot
+            test_id (List[str]): Tests to plot
+            capability_loc (str): Location to calculate cpability for
 
-            part = part_dict[pn]
+        Returns:
+            List[Any]: Elements to display
+        """
+        # Get all inputs first (except test_id as that can be None)
+        if locs and pn and ptype:
+
+            # if test_id is empty then change to None
+            if not test_id:
+                test_id = None
+
             # get part
-            # SPCFigure uses none to indicate all locations
-            if "All" in locs:
-                locs = None
+            part = part_dict[pn]
+
+            # Convert "None" option to NoneType
+            if capability_loc == "None":
+                capability_loc = None
 
             elements = []
 
-            for title, fig in plot_factory(part, ptype, locs).items():
+            for title, fig in plot_factory(
+                part, ptype, locs, test_id, capability_loc
+            ).items():
                 elements.append(html.H2(children=title))
-                elements.append(html.Div(children=dcc.Graph(figure=fig)))
+                elements.append(
+                    dcc.Graph(
+                        figure=fig, animate=True, config={"displaylogo": False}
+                    )
+                )
+                elements.append(html.Hr())
 
             return elements
 
@@ -266,18 +382,20 @@ def dash_app(filepath: str, debug: bool = False):
 
 
 def plot_factory(
-    part: PartNumber, plot_type: str, locations: Union[List[str], None]
+    part: PartNumber,
+    plot_type: str,
+    locations: Union[List[str], None],
+    test_id: Union[List[str], str],
+    capability_loc: str,
 ) -> Dict[str, SPCFigure]:
     """Create plot using parameters from the dash interface.
 
-    Parameters
-    ----------
-    part : PartNumber
-        PartNubmer object to plot for object
-    plot_type : str
-        Type of plot
-    locations : Union[List[str], None]
-        List of locations to plot for
+    Args:
+        part (PartNumber): PartNubmer object to plot for object
+        plot_type (str): Type of plot
+        locations (Union[List[str], None]): List of locations to plot for
+        test_id (Union[List[str], str]): Test_ids to plot for
+        capability_loc (str): Lcoation to calcualte capability for
     """
     # Select plot type
     if plot_type == "xbar":
@@ -287,8 +405,8 @@ def plot_factory(
         # calculate capability for Portland
         return part.xbar(
             location=locations,
-            test_id=None,
-            capability_loc=None,
+            test_id=test_id,
+            capability_loc=capability_loc,
             meanline=True,
             violin=True,
         )

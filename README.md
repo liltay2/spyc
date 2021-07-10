@@ -8,5 +8,7 @@ Simple tool to help plot SPC data for production purposes
 
 Supports comparison of measurment data between locations (could also be hijacked to compare production equipment within a single location)
 
-Interactive plots are outputted in ther browser using plotly
+Interactive plots are outputted in ther browser using plotly and dash
+
+
 

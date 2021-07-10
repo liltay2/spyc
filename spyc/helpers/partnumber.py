@@ -131,7 +131,7 @@ class PartNumber:
     def xbar(
         self,
         location: Optional[Union[str, List[str]]] = None,
-        test_id: Optional[str] = None,
+        test_id: Optional[Union[str, List[str]]] = None,
         capability_loc: Optional[str] = None,
         **kwargs: Any,
     ) -> Dict[str, SPCFigure]:
@@ -139,7 +139,7 @@ class PartNumber:
 
         Args:
             location (Optional[Union[str, list[str]]], optional): Sheetname(s)
-            test_id (Optional[str], optional): id of the test
+            test_id ((Optional[Union[str, list[str]]], optional): id of the test(s)
                 in test list to plot, default to plot all tests seperately
             capability_loc (Optional[str], optional): Sheetname for cp & cpk
                 default is to not calculate for multiple locations
@@ -149,13 +149,19 @@ class PartNumber:
                 off bv default
             to plot data for, default is to plot all locations
         """
-        # List to hold all plots
+        # Dict to hold all plots, title is the key
         figs = {}
 
-        if test_id is None:
-            self.log.debug("Plotting all tests")
-            # Plot all tests
-            for t_id in self.tests.index.get_level_values(0).unique():
+        # Check for single plot
+        if not isinstance(test_id, str):
+            self.log.debug("Plotting multiple tests")
+
+            # Check to plot all
+            if test_id is None:
+                test_id = self.tests.index.get_level_values(0).unique()
+
+            # Plot selected tests
+            for t_id in test_id:
                 self.log.debug(f"Plotting test = {t_id}")
                 title, fig = self.xbar_plot(
                     str(t_id),
@@ -195,8 +201,6 @@ class PartNumber:
             test_id (str): id of the test in test list to plot
             location (Optional[Union[str, list[str]]], optional): Sheetname(s)
             capability_loc (Optional[str], optional): sheetname for cp & cpk
-                required if data is a dict else capability is ignored
-                to plot data for, default is to plot all locations
             meanline (bool, optional): Plot a meanline for each location
                 off bv default
             violin (bool, optional): Plot a violin for each location
@@ -206,78 +210,62 @@ class PartNumber:
         # Enforce string type
         test_id = str(test_id)
 
+        # Get Limits
+        lsl, usl = self.get_limits(test_id)
+
         # Check if capability is needed
-        if (
-            isinstance(location, list) or location is None
-        ):  # Multiple locations
-            if capability_loc is not None:
+        if capability_loc is not None:
 
-                self.log.debug(
-                    f"Calculating capability for {capability_loc}, test"
-                    f" {test_id}"
+            self.log.debug(
+                f"Calculating capability for {capability_loc}, test {test_id}"
+            )
+
+            # Calcualte cp and cpk for specified location
+            try:
+                cp, cpk = PartNumber.calculate_capability(
+                    PartNumber.extract_test(
+                        self.data[capability_loc], test_id
+                    ),
+                    lsl,
+                    usl,
                 )
-
-                # Get Limits
-                lsl, usl = self.get_limits(test_id)
-
-                # Calcualte cp and cpk for specified location
-                try:
-                    cp, cpk = PartNumber.calculate_capability(
-                        PartNumber.extract_test(
-                            self.data[capability_loc], test_id
-                        ),
-                        lsl,
-                        usl,
-                    )
-                except KeyError as e:
-                    self.log.error(f"Invalid capability_loc -\n{e}")
-
-            else:
-                self.log.debug(
-                    "Not calculating capability, capability_loc not set"
-                )
-                cp, cpk = np.nan, np.nan
+            except KeyError as e:
+                self.log.error(f"Invalid capability_loc -\n{e}")
 
         else:
             self.log.debug(
-                f"Calculating capability for single location - {location}"
+                "Not calculating capability, capability_loc not set"
             )
-
-            # Get Limits
-            lsl, usl = self.get_limits(test_id)
-
-            cp, cpk = PartNumber.calculate_capability(
-                PartNumber.extract_test(self.data[location], test_id), lsl, usl
-            )
-
-            # set capability_loc for the single location requested
-            if capability_loc is None:
-                capability_loc = location
 
         # Create figure to write too
-        title = (
-            f"{self.header['Part Number']}  "
-            f"{self.tests.loc[test_id,'Test_Name']}  {capability_loc}"
-            f"  Cp/Cpk={cp:.2f}/{cpk:.2f}"
-        )
+        if capability_loc is None:
+            title = (
+                f"{self.header['Part Number']}  "
+                f"{self.tests.loc[test_id,'Test_Name']}"
+            )
+
+        else:
+            title = (
+                f"{self.header['Part Number']}  "
+                f"{self.tests.loc[test_id,'Test_Name']}"
+                f"  Cp/Cpk={cp:.2f}/{cpk:.2f} @ {capability_loc}"
+            )
 
         fig = SPCFigure(title=title)
-
-        # extract test to plot
 
         # if location is none then it is all
         if location is None:
             location = list(self.data.keys())
 
+        # extract test to plot
+        datasets = {}
         if isinstance(location, list):
-            # multiple locations so extract single test for all
-            datasets = {}
+            # multiple locations so extract single test for each
             for loc in location:
                 datasets[loc] = PartNumber.extract_test(
                     self.data[loc], test_id
                 )
         else:
-            datasets = {}  # pass a 1 entry dict
             datasets[location] = PartNumber.extract_test(
                 self.data[location], test_id
             )

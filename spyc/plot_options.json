@@ -1,0 +1,21 @@
+{
+    "range":
+    {
+        "capability": false,
+        "max_locs": 1,
+        "options":
+        [
+            "mean_line"
+        ]
+    },
+    "xbar":
+    {
+        "capability": true,
+        "max_locs": null,
+        "options":
+        [
+            "mean_line",
+            "violin"
+        ]
+    }
+}
