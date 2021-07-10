@@ -169,7 +169,12 @@ class SPCFigure(go.FigureWidget):  # pylint: disable=too-many-ancestors
             uniformtext_minsize=8,
             uniformtext_mode="hide",
             legend=dict(
-                orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1
+                orientation="h",
+                showlegend=True,
+                yanchor="bottom",
+                y=1.02,
+                xanchor="right",
+                x=1,
             ),
             xaxis_title="Unit SN",
             yaxis_title=f"{test['Test_Name']}, {test['Units']}",

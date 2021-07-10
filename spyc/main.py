@@ -164,6 +164,8 @@ def dash_app(filepath: str, debug: bool = False):
         dcc.RadioItems(
             id="cap_dd", labelStyle={"display": "inline-block"}, value="None"
         ),
+        html.Div(id="option_title"),
+        dcc.Checklist(id="option_dd", labelStyle={"display": "inline-block"}),
         html.Div(id="fig_container"),
     ]
 
@@ -179,13 +181,14 @@ def dash_app(filepath: str, debug: bool = False):
         """
         if pn:
             return "Plot data for:"
+        return ""
 
     @app.callback(
         Output("cap_title", "children"),
         [Input("part_dd", "value"), Input("plot_dd", "value")],
     )
     def show_cap_title(pn: str, ptype: str) -> str:
-        """Show location title only if PN is selected. And plot allows capability
+        """Show capability title only if PN is selected. And plot allows capability
 
         Args:
             pn (str): pn to plot
@@ -197,8 +200,24 @@ def dash_app(filepath: str, debug: bool = False):
         if pn and ptype:
             if plot_types[ptype]["capability"]:
                 return "Measure capability from:"
-        else:
-            return ""
+        return ""
+
+    @app.callback(
+        Output("option_title", "children"), Input("plot_dd", "value")
+    )
+    def show_option_title(ptype: str) -> str:
+        """Show option title only if PN is selected.
+
+        Args:
+            ptype (str): plot type
+
+        Returns:
+            str: plot options title
+        """
+        # only disaply if the plot type has options
+        if ptype and len(plot_types[ptype]["options"]) > 0:
+            return "Plot Options:"
+        return ""
 
     @app.callback(Output("loc_dd", "options"), [Input("part_dd", "value")])
     def get_loc(value: str) -> List[Dict[str, str]]:
@@ -318,6 +337,32 @@ def dash_app(filepath: str, debug: bool = False):
 
         return []
 
+    @app.callback(Output("option_dd", "options"), Input("plot_dd", "value"))
+    def get_options(ptype: str) -> List[Dict[str, str]]:
+        """Display plot types avaialable.
+
+        Parameters
+
+        ptype: str
+            Selected plot type
+
+        Returns
+        -------
+        List[Dict[str,str]]
+            Checklist options for plot options
+        """
+        if ptype and len(plot_types[ptype]["options"]) > 0:
+            option_dd_options = []
+
+            for option in plot_types[ptype]["options"]:
+                print(option)
+                option_dd_options.append({"label": option, "value": option})
+
+            print(option_dd_options)
+            return option_dd_options
+
+        return []
+
     @app.callback(
         Output("fig_container", "children"),
         [
@@ -326,6 +371,7 @@ def dash_app(filepath: str, debug: bool = False):
             Input("plot_dd", "value"),
             Input("test_dd", "value"),
             Input("cap_dd", "value"),
+            Input("option_dd", "value"),
         ],
     )
     def plot_figure(
@@ -334,6 +380,7 @@ def dash_app(filepath: str, debug: bool = False):
         ptype: str,
         test_id: List[str],
         capability_loc: str,
+        options: List[str],
     ) -> List[Any]:
         """plot the figures.
 
@@ -343,6 +390,7 @@ def dash_app(filepath: str, debug: bool = False):
             ptype (str): Type of plot
             test_id (List[str]): Tests to plot
             capability_loc (str): Location to calculate cpability for
+            options (List(str)): options selected by the user
 
         Returns:
             List[Any]: Elements to display
@@ -361,12 +409,17 @@ def dash_app(filepath: str, debug: bool = False):
             if capability_loc == "None":
                 capability_loc = None
 
+            # handle no options slected case
+            if options is None:
+                options = []
+
             elements = []
 
+            print(options)
+
             for title, fig in plot_factory(
-                part, ptype, locs, test_id, capability_loc
+                part, ptype, locs, test_id, capability_loc, options
             ).items():
-                elements.append(html.H2(children=title))
                 elements.append(
                     dcc.Graph(
                         figure=fig, animate=True, config={"displaylogo": False}
@@ -387,6 +440,7 @@ def plot_factory(
     locations: Union[List[str], None],
     test_id: Union[List[str], str],
     capability_loc: str,
+    options: List[str],
 ) -> Dict[str, SPCFigure]:
     """Create plot using parameters from the dash interface.
 
@@ -407,30 +461,9 @@ def plot_factory(
             location=locations,
             test_id=test_id,
             capability_loc=capability_loc,
-            meanline=True,
-            violin=True,
+            meanline="meanline" in options,
+            violin="violin" in options,
         )
-
-        # TODO capability loc and test_id
-
-        #     else:
-        #         log.error(
-        #             "Invalid capability_loc passed for PN:"
-        #             f" {part.header['Part Number']}\ncapability_loc"
-        #             " passed as :"
-        #             f" {arguments['--capability_loc']}\nLocations in"
-        #             f" input: {locations}"
-        #         )
-        #         raise ValueError("Invalid capability_loc")
-
-        # else:
-        #     log.error(
-        #         "Invalid Locations passed for PN:"
-        #         f" {part.header['Part Number']}\nLocations passed as"
-        #         f" argument: {locations}\nLocations in data files:"
-        #         f" {part.data.keys()}"
-        #     )
-        #     raise ValueError("Invalid locations")
 
 
 @entry
