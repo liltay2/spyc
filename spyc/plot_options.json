@@ -1,11 +1,4 @@
 {
-    "range":
-    {
-        "capability": false,
-        "max_locs": 1,
-        "options":
-        []
-    },
     "xbar":
     {
         "capability": true,

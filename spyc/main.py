@@ -358,7 +358,6 @@ def dash_app(filepath: str, debug: bool = False):
                 print(option)
                 option_dd_options.append({"label": option, "value": option})
 
-            print(option_dd_options)
             return option_dd_options
 
         return []
@@ -415,15 +414,11 @@ def dash_app(filepath: str, debug: bool = False):
 
             elements = []
 
-            print(options)
-
             for title, fig in plot_factory(
                 part, ptype, locs, test_id, capability_loc, options
             ).items():
                 elements.append(
-                    dcc.Graph(
-                        figure=fig, animate=True, config={"displaylogo": False}
-                    )
+                    dcc.Graph(figure=fig, config={"displaylogo": False})
                 )
                 elements.append(html.Hr())
 
@@ -453,7 +448,6 @@ def plot_factory(
     """
     # Select plot type
     if plot_type == "xbar":
-        log.info("xbar plot")
 
         # Plots for all sites all tests,
         # calculate capability for Portland

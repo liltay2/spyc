@@ -163,6 +163,7 @@ class PartNumber:
             # Plot selected tests
             for t_id in test_id:
                 self.log.debug(f"Plotting test = {t_id}")
+
                 title, fig = self.xbar_plot(
                     str(t_id),
                     location=location,
@@ -213,7 +214,7 @@ class PartNumber:
         # Get Limits
         lsl, usl = self.get_limits(test_id)
 
-        # Check if capability is needed
+        # Check if capability is set
         if capability_loc is not None:
 
             self.log.debug(
@@ -229,6 +230,13 @@ class PartNumber:
                     lsl,
                     usl,
                 )
+
+                title = (
+                    f"{self.header['Part Number']}  "
+                    f"{self.tests.loc[test_id,'Test_Name']}"
+                    f"  Cp/Cpk={cp:.2f}/{cpk:.2f} @ {capability_loc}"
+                )
+
             except KeyError as e:
                 self.log.error(f"Invalid capability_loc -\n{e}")
 
@@ -237,20 +245,12 @@ class PartNumber:
                 "Not calculating capability, capability_loc not set"
             )
 
-        # Create figure to write too
-        if capability_loc is None:
             title = (
                 f"{self.header['Part Number']}  "
                 f"{self.tests.loc[test_id,'Test_Name']}"
             )
 
-        else:
-            title = (
-                f"{self.header['Part Number']}  "
-                f"{self.tests.loc[test_id,'Test_Name']}"
-                f"  Cp/Cpk={cp:.2f}/{cpk:.2f} @ {capability_loc}"
-            )
-
+        print(title)
         fig = SPCFigure(title=title)
 
         # if location is none then it is all
