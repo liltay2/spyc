@@ -24,15 +24,13 @@
 import os
 import glob
 import logging
-from typing import Optional, List, Dict, Any, Union
+from typing import List, Dict, Any, Union
 import json
 
 from mainentry import entry
-from rich.console import Console
-from rich.markdown import Markdown
-from rich_dataframe import prettify  # type: ignore
 from docopt import docopt  # type: ignore
-import pandas as pd  # type: ignore
+
+# import pandas as pd  # type: ignore
 
 import dash  # type: ignore
 import dash_core_components as dcc  # type: ignore
@@ -47,7 +45,6 @@ from .helpers.spcfigure import SPCFigure
 
 # create logger
 log = logging.getLogger(__name__)
-console = Console()
 
 # Argument handling and setup
 arguments = docopt(__doc__, version=f"SPYC {__version__}")
@@ -82,7 +79,6 @@ def make_parts(filepath: str) -> Dict[str, PartNumber]:
     Raises:
         ValueError: Description
     """
-
     if not os.path.isabs(filepath):
 
         filepath = os.path.abspath(filepath)
@@ -188,7 +184,7 @@ def dash_app(filepath: str, debug: bool = False):
         [Input("part_dd", "value"), Input("plot_dd", "value")],
     )
     def show_cap_title(pn: str, ptype: str) -> str:
-        """Show capability title only if PN is selected. And plot allows capability
+        """Show capability title only if PN is selected and plot allows capability.
 
         Args:
             pn (str): pn to plot
@@ -233,7 +229,6 @@ def dash_app(filepath: str, debug: bool = False):
         List[Dict[str:str]]
             checklist options for locations
         """
-
         loc_dd_options = []
 
         if value is not None:
@@ -342,7 +337,6 @@ def dash_app(filepath: str, debug: bool = False):
         """Display plot types avaialable.
 
         Parameters
-
         ptype: str
             Selected plot type
 
@@ -377,17 +371,17 @@ def dash_app(filepath: str, debug: bool = False):
         pn: str,
         locs: List[str],
         ptype: str,
-        test_id: List[str],
-        capability_loc: str,
-        options: List[str],
-    ) -> List[Any]:
-        """plot the figures.
+        test_id: Union[List[str], None],
+        capability_loc: Union[str, None],
+        options: Union[List[str], None],
+    ):
+        """Plot the figures.
 
         Args:
             pn (str): Part Number to plot
             locs (List[str]): Locations to plot
             ptype (str): Type of plot
-            test_id (List[str]): Tests to plot
+            test_id (Union[List[str], None]): Tests to plot
             capability_loc (str): Location to calculate cpability for
             options (List(str)): options selected by the user
 
@@ -417,10 +411,13 @@ def dash_app(filepath: str, debug: bool = False):
             for title, fig in plot_factory(
                 part, ptype, locs, test_id, capability_loc, options
             ).items():
-                elements.append(
-                    dcc.Graph(figure=fig, config={"displaylogo": False})
-                )
-                elements.append(html.Hr())
+                if fig is not None:
+                    elements.append(
+                        dcc.Graph(
+                            id=title, figure=fig, config={"displaylogo": False}
+                        )
+                    )
+                    elements.append(html.Hr())
 
             return elements
 
@@ -433,10 +430,10 @@ def plot_factory(
     part: PartNumber,
     plot_type: str,
     locations: Union[List[str], None],
-    test_id: Union[List[str], str],
-    capability_loc: str,
+    test_id: Union[List[str], str, None],
+    capability_loc: Union[str, None],
     options: List[str],
-) -> Dict[str, SPCFigure]:
+) -> Union[Dict[str, SPCFigure], Dict[None, None]]:
     """Create plot using parameters from the dash interface.
 
     Args:
@@ -458,6 +455,8 @@ def plot_factory(
             meanline="meanline" in options,
             violin="violin" in options,
         )
+    else:
+        return {None: None}
 
 
 @entry

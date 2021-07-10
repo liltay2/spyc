@@ -139,8 +139,9 @@ class PartNumber:
 
         Args:
             location (Optional[Union[str, list[str]]], optional): Sheetname(s)
-            test_id ((Optional[Union[str, list[str]]], optional): id of the test(s)
-                in test list to plot, default to plot all tests seperately
+            test_id ((Optional[Union[str, list[str]]], optional):
+                id of the test(s) in test list to plot,
+                default to plot all tests seperately
             capability_loc (Optional[str], optional): Sheetname for cp & cpk
                 default is to not calculate for multiple locations
             meanline (bool, optional): Plot a meanline for each location
@@ -250,7 +251,6 @@ class PartNumber:
                 f"{self.tests.loc[test_id,'Test_Name']}"
             )
 
-        print(title)
         fig = SPCFigure(title=title)
 
         # if location is none then it is all
