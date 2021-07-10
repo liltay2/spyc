@@ -17,6 +17,7 @@ ipywidgets = "^7.6.3"
 dash = "^1.20.0"
 docopt = "^0.6.2"
 mainentry = "^2.0"
+PyQtWebEngine = "5.15.2"
 webui = { git = "https://github.com/Widdershin/flask-desktop.git"}
 
 [tool.poetry.dev-dependencies]
